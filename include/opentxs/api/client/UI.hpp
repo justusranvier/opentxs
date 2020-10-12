@@ -12,6 +12,7 @@
 
 #include "opentxs/Proto.hpp"
 #include "opentxs/Types.hpp"
+#include "opentxs/display/Types.hpp"
 #include "opentxs/protobuf/ContactEnums.pb.h"
 
 #ifdef SWIG
@@ -80,6 +81,7 @@ class ActivityThreadQt;
 class BlockchainSelectionQt;
 class ContactListQt;
 class ContactQt;
+class DisplayScaleListQt;
 class MessagableListQt;
 class PayableListQt;
 class ProfileQt;
@@ -133,6 +135,12 @@ public:
     OPENTXS_EXPORT virtual const ui::ContactList& ContactList(
         const identifier::Nym& nymID,
         const SimpleCallback updateCB = {}) const noexcept = 0;
+    OPENTXS_EXPORT virtual display::ScaleMap DisplayScales(
+        const proto::ContactItemType currency) const noexcept = 0;
+    OPENTXS_EXPORT virtual display::ScaleMap DisplayScales(
+        const opentxs::blockchain::Type currency) const noexcept = 0;
+    OPENTXS_EXPORT virtual display::ScaleMap DisplayScales(
+        const Identifier& account) const noexcept = 0;
     OPENTXS_EXPORT virtual const ui::MessagableList& MessagableList(
         const identifier::Nym& nymID,
         const SimpleCallback updateCB = {}) const noexcept = 0;
@@ -186,6 +194,9 @@ public:
     OPENTXS_EXPORT virtual ui::ContactListQt* ContactListQt(
         const identifier::Nym& nymID,
         const SimpleCallback updateCB = {}) const noexcept = 0;
+    /// Caller does not own this pointer
+    OPENTXS_EXPORT virtual ui::DisplayScaleListQt* DisplayScalesQt(
+        const Identifier& account) const noexcept = 0;
     /// Caller does not own this pointer
     OPENTXS_EXPORT virtual ui::MessagableListQt* MessagableListQt(
         const identifier::Nym& nymID,

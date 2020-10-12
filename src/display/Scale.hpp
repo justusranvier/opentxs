@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "opentxs/Types.hpp"
+#include "opentxs/display/Types.hpp"
 
 namespace opentxs::display
 {
@@ -25,7 +26,6 @@ public:
     /// A ratio should express the quantity of smallest values (from Amount)
     /// which represent a scale unit.
     using Ratio = std::pair<std::uint8_t, std::int8_t>;
-    using OptionalInt = std::optional<std::uint8_t>;
 
     auto Format(
         const Amount amount,

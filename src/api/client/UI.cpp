@@ -693,6 +693,40 @@ auto UI::ContactListQt(const identifier::Nym& nymID, const SimpleCallback cb)
 }
 #endif
 
+auto UI::DisplayScales(const proto::ContactItemType currency) const noexcept
+    -> display::ScaleMap
+{
+    // FIXME
+
+    return {};
+}
+
+auto UI::DisplayScales(const opentxs::blockchain::Type currency) const noexcept
+    -> display::ScaleMap
+{
+    // FIXME
+
+    return {};
+}
+
+auto UI::DisplayScales(const Identifier& account) const noexcept
+    -> display::ScaleMap
+{
+    // FIXME
+
+    return {};
+}
+
+#if OT_QT
+auto UI::DisplayScalesQt(const Identifier& account) const noexcept
+    -> ui::DisplayScaleListQt*
+{
+    // FIXME
+
+    return {};
+}
+#endif  // OT_QT
+
 auto UI::Init() noexcept -> void
 {
 #if OT_BLOCKCHAIN

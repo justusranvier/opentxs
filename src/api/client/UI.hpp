@@ -134,6 +134,12 @@ public:
         const noexcept -> const ui::Contact& final;
     auto ContactList(const identifier::Nym& nymID, const SimpleCallback cb)
         const noexcept -> const ui::ContactList& final;
+    auto DisplayScales(const proto::ContactItemType currency) const noexcept
+        -> display::ScaleMap final;
+    auto DisplayScales(const opentxs::blockchain::Type currency) const noexcept
+        -> display::ScaleMap final;
+    auto DisplayScales(const Identifier& account) const noexcept
+        -> display::ScaleMap final;
     auto MessagableList(const identifier::Nym& nymID, const SimpleCallback cb)
         const noexcept -> const ui::MessagableList& final;
     auto PayableList(
@@ -184,6 +190,8 @@ public:
         const noexcept -> ui::ContactQt* final;
     auto ContactListQt(const identifier::Nym& nymID, const SimpleCallback cb)
         const noexcept -> ui::ContactListQt* final;
+    auto DisplayScalesQt(const Identifier& account) const noexcept
+        -> ui::DisplayScaleListQt* final;
     auto MessagableListQt(const identifier::Nym& nymID, const SimpleCallback cb)
         const noexcept -> ui::MessagableListQt* final;
     auto PayableListQt(

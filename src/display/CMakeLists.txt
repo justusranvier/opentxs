@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 set(cxx-sources "Definition.cpp" "Scale.cpp")
-set(cxx-install-headers "")
+set(cxx-install-headers
+    "${opentxs_SOURCE_DIR}/include/opentxs/display/Types.hpp"
+)
 set(cxx-headers
     ${cxx-install-headers}
     "Definition.hpp"
@@ -15,4 +17,11 @@ set(cxx-headers
 
 add_library(opentxs-display OBJECT ${cxx-sources} ${cxx-headers})
 target_link_libraries(opentxs-display PRIVATE Boost::headers opentxs::messages)
-add_dependencies(opentxs-display generated_code)
+
+if(OPENTXS_STANDALONE)
+  install(
+    FILES ${cxx-install-headers}
+    DESTINATION include/opentxs/display
+    COMPONENT dev
+  )
+endif()

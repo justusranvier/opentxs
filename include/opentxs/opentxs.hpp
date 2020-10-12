@@ -152,6 +152,7 @@
 #include "opentxs/crypto/library/EncodingProvider.hpp"
 #include "opentxs/crypto/library/HashingProvider.hpp"
 #include "opentxs/crypto/library/SymmetricProvider.hpp"
+#include "opentxs/display/Types.hpp"
 #include "opentxs/ext/Helpers.hpp"
 #include "opentxs/ext/OTPayment.hpp"
 #include "opentxs/identity/Authority.hpp"
