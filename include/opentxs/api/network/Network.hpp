@@ -15,6 +15,7 @@ namespace api
 namespace network
 {
 class Asio;
+class Bitmessage;
 class Blockchain;
 class Dht;
 }  // namespace network
@@ -41,6 +42,7 @@ public:
     struct Imp;
 
     auto Asio() const noexcept -> const network::Asio&;
+    auto Bitmessage() const noexcept -> const network::Bitmessage&;
     auto Blockchain() const noexcept -> const network::Blockchain&;
     auto DHT() const noexcept -> const network::Dht&;
     auto ZeroMQ() const noexcept -> const opentxs::network::zeromq::Context&;

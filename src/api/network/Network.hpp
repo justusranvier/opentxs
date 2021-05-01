@@ -10,6 +10,7 @@
 
 #include "api/network/Dht.hpp"
 #include "internal/api/network/Factory.hpp"
+#include "opentxs/api/network/Bitmessage.hpp"
 #include "opentxs/api/network/Blockchain.hpp"
 #include "opentxs/api/network/Dht.hpp"
 #include "opentxs/api/network/Network.hpp"
@@ -48,6 +49,7 @@ struct Network::Imp {
     const opentxs::network::zeromq::Context& zmq_;
     std::unique_ptr<Dht> dht_;
     network::Blockchain blockchain_;
+    network::Bitmessage bitmessage_;
 
     Imp(const api::internal::Core& api,
         const network::Asio& asio,
@@ -75,6 +77,7 @@ struct Network::Imp {
               unitPublishInterval,
               unitRefreshInterval))
         , blockchain_(blockchain)
+        , bitmessage_(factory::BitmessageAPI(api))
     {
     }
 

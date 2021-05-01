@@ -11,6 +11,8 @@ add_library(
   "${opentxs_SOURCE_DIR}/src/internal/api/network/Network.hpp"
   "Asio.cpp"
   "Asio.hpp"
+  "Bitmessage.cpp"
+  "Bitmessage.hpp"
   "Blockchain.cpp"
   "Blockchain.hpp"
   "Dht.cpp"
@@ -37,6 +39,11 @@ target_link_libraries(opentxs PUBLIC Boost::system Boost::thread)
 target_include_directories(
   opentxs-api-network SYSTEM PRIVATE "${opentxs_SOURCE_DIR}/deps/"
 )
+
+if(NOT OT_BLOCKCHAIN_EXPORT)
+  target_sources(opentxs-api-network PRIVATE "bitmessage/Null.cpp")
+endif()
+
 target_sources(opentxs-api-network PRIVATE ${cxx-install-headers})
 target_sources(opentxs PRIVATE $<TARGET_OBJECTS:opentxs-api-network>)
 add_dependencies(opentxs-api-network generated_code)

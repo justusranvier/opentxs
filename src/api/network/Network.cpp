@@ -55,6 +55,11 @@ auto Network::Asio() const noexcept -> const network::Asio&
     return imp_->asio_;
 }
 
+auto Network::Bitmessage() const noexcept -> const network::Bitmessage&
+{
+    return imp_->bitmessage_;
+}
+
 auto Network::Blockchain() const noexcept -> const network::Blockchain&
 {
     return imp_->blockchain_;
@@ -65,7 +70,11 @@ auto Network::DHT() const noexcept -> const network::Dht&
     return *imp_->dht_;
 }
 
-auto Network::Shutdown() noexcept -> void { imp_->dht_.reset(); }
+auto Network::Shutdown() noexcept -> void
+{
+    imp_->dht_.reset();
+    imp_->bitmessage_.Stop();
+}
 
 auto Network::ZeroMQ() const noexcept
     -> const opentxs::network::zeromq::Context&

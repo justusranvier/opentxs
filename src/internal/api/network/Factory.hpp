@@ -27,6 +27,7 @@ struct Core;
 
 namespace network
 {
+class Bitmessage;
 class Asio;
 class Dht;
 class Network;
@@ -47,6 +48,7 @@ class Context;
 
 namespace opentxs::factory
 {
+auto BitmessageAPI(const api::Core& api) noexcept -> api::network::Bitmessage;
 auto BlockchainNetworkAPI(
     const api::Core& api,
     const api::Endpoints& endpoints,
