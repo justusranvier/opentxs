@@ -129,6 +129,67 @@ auto Data::Add(ReadView data) noexcept -> bool
     }
 }
 
+auto Data::Add(Data&& data) noexcept -> bool
+{
+    auto& blocks = const_cast<std::vector<Block>&>(imp_->blocks_);
+    auto& rhs = const_cast<std::vector<Block>&>(data.imp_->blocks_);
+
+    if (0 == rhs.size()) { return true; }
+
+    if (0 == blocks.size()) {
+        std::move(rhs.begin(), rhs.end(), std::back_inserter(blocks));
+
+        return true;
+    }
+
+    try {
+        auto begin = [&] {
+            const auto back = blocks.back().Height();
+            const auto target = back + 1;
+            const auto first = rhs.front().Height();
+
+            if (target == first) {
+                // NOTE Most common case. Incoming data starts exactly one block
+                // after existing data.
+
+                return rhs.begin();
+            }
+
+            if (target < first) {
+                // NOTE Incoming data starts more than one block after existing
+                // data. It's impossible to merge these items.
+
+                throw std::runtime_error{"Non-contiguous range"};
+            }
+
+            const auto front = blocks.front().Height();
+
+            if (front <= first) {
+                // NOTE Incoming data starts before existing data. This might
+                // happen due to a reorg.
+                blocks.clear();
+
+                return rhs.begin();
+            }
+
+            // NOTE Incoming data starts in the middle of existing data.
+            // Existing blocks are presumed to be invalid due to reorg and are
+            // erased.
+            const auto overlap = first - front;
+            blocks.erase(std::next(blocks.begin(), overlap), blocks.end());
+
+            return rhs.begin();
+        }();
+        std::move(begin, rhs.end(), std::back_inserter(blocks));
+
+        return true;
+    } catch (const std::exception& e) {
+        LogOutput(OT_METHOD)(__FUNCTION__)(": ")(e.what()).Flush();
+
+        return false;
+    }
+}
+
 auto Data::Blocks() const noexcept -> const SyncData& { return imp_->blocks_; }
 
 auto Data::LastPosition(const api::Core& api) const noexcept -> Position

@@ -47,6 +47,8 @@ public:
     OPENTXS_NO_EXPORT auto Serialize(AllocateOutput dest) const noexcept
         -> bool;
 
+    OPENTXS_NO_EXPORT auto operator=(Block&& rhs) noexcept -> Block&;
+
     OPENTXS_NO_EXPORT Block(
         const proto::BlockchainP2PSync& serialized) noexcept(false);
     OPENTXS_NO_EXPORT Block(
@@ -68,7 +70,6 @@ private:
     Block() noexcept;
     Block(const Block&) = delete;
     auto operator=(const Block&) -> Block& = delete;
-    auto operator=(Block&&) -> Block& = delete;
 };
 }  // namespace sync
 }  // namespace blockchain

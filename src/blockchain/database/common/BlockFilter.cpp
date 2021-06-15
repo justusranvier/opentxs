@@ -179,7 +179,12 @@ auto BlockFilter::StoreFilters(
                 reader(bytes),
                 parentTxn);
 
-            if (false == stored.first) { return false; }
+            if (false == stored.first) {
+                LogOutput(OT_METHOD)(__FUNCTION__)(": Failed to save cfheaders")
+                    .Flush();
+
+                return false;
+            }
         } catch (const std::exception& e) {
             LogOutput(OT_METHOD)(__FUNCTION__)(": ")(e.what()).Flush();
         }
@@ -206,7 +211,12 @@ auto BlockFilter::StoreFilters(
             const auto stored = lmdb_.Store(
                 translate_filter(type), block, reader(bytes), parentTxn);
 
-            if (false == stored.first) { return false; }
+            if (false == stored.first) {
+                LogOutput(OT_METHOD)(__FUNCTION__)(": Failed to save cfilters")
+                    .Flush();
+
+                return false;
+            }
         } catch (const std::exception& e) {
             LogOutput(OT_METHOD)(__FUNCTION__)(": ")(e.what()).Flush();
         }

@@ -844,8 +844,17 @@ auto Base::process_send_to_payment_code(network::zeromq::Message& in) noexcept
 auto Base::process_sync_data(network::zeromq::Message& in) noexcept -> void
 {
     const auto start = Clock::now();
-    const auto sync = opentxs::network::blockchain::sync::Factory(api_, in);
-    const auto& data = sync->asData();
+    const auto body = in.Body();
+
+    OT_ASSERT(1 < body.size());
+
+    using Base = opentxs::network::blockchain::sync::Base;
+    const auto base = std::unique_ptr<Base>(
+        reinterpret_cast<Base*>(body.at(1).as<std::uintptr_t>()));
+
+    OT_ASSERT(base);
+
+    const auto& data = base->asData();
 
     {
         const auto& state = data.State();

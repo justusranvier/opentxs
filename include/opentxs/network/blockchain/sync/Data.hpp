@@ -56,6 +56,7 @@ public:
     auto State() const noexcept -> const sync::State&;
 
     OPENTXS_NO_EXPORT auto Add(ReadView data) noexcept -> bool;
+    OPENTXS_NO_EXPORT auto Add(Data&& data) noexcept -> bool;
 
     OPENTXS_NO_EXPORT Data(
         WorkType type,

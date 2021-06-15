@@ -89,6 +89,13 @@ Block::Block(Block&& rhs) noexcept
     rhs.imp_ = nullptr;
 }
 
+auto Block::operator=(Block&& rhs) noexcept -> Block&
+{
+    if (&rhs != this) { std::swap(imp_, rhs.imp_); }
+
+    return *this;
+}
+
 auto Block::Chain() const noexcept -> opentxs::blockchain::Type
 {
     return imp_->chain_;

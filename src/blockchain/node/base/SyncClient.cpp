@@ -66,6 +66,7 @@ struct SyncClient::Imp {
         , api_(api)
         , chain_(chain)
         , lock_()
+        , begin_sync_()
         , activity_()
         , processing_(false)
         , dealer_([&] {
@@ -141,14 +142,17 @@ private:
     using Socket = std::unique_ptr<void, decltype(&::zmq_close)>;
     using OTSocket = opentxs::network::zeromq::socket::implementation::Socket;
     using Task = api::network::blockchain::SyncClient::Task;
+    using Queue = std::
+        pair<std::size_t, std::unique_ptr<network::blockchain::sync::Base>>;
 
     static constexpr int linger_{0};
-    static constexpr std::size_t limit_{32_MiB};
+    static constexpr std::size_t limit_{64_MiB};
     static constexpr std::chrono::seconds retry_interval_{4};
 
     const api::Core& api_;
     const Type chain_;
     mutable std::mutex lock_;
+    Time begin_sync_;
     Time activity_;
     bool processing_;
     Socket dealer_;
@@ -158,7 +162,7 @@ private:
     block::Position remote_position_;
     block::Position queue_position_;
     std::size_t queued_bytes_;
-    std::queue<OTZMQMessage> queue_;
+    std::queue<Queue> queue_;
     Backoff timer_;
     std::atomic_bool running_;
     std::thread thread_;
@@ -218,8 +222,8 @@ private:
 
     auto add_to_queue(OTZMQMessage&& msg) noexcept -> void
     {
-        const auto base = sync::Factory(api_, msg);
-        const auto& data = base->asData();
+        auto base = sync::Factory(api_, msg);
+        auto& data = base->asData();
         const auto& blocks = data.Blocks();
         update_remote_position(data.State());
 
@@ -230,9 +234,25 @@ private:
             " bytes of sync data for ")(DisplayString(chain_))(" blocks ")(
             blocks.front().Height())(" to ")(blocks.back().Height())
             .Flush();
-        queued_bytes_ += bytes;
-        queue_.emplace(std::move(msg));
         update_queue_position(data);
+        queued_bytes_ += bytes;
+
+        /*
+        if (0 < queue_.size()) {
+            auto& [eBytes, eBase] = queue_.back();
+            auto& existing =
+                const_cast<network::blockchain::sync::Data&>(eBase->asData());
+            auto& incoming = const_cast<network::blockchain::sync::Data&>(data);
+
+            if (existing.Add(std::move(incoming))) {
+                eBytes += bytes;
+
+                return;
+            }
+        }
+        */
+
+        queue_.emplace(bytes, std::move(base));
     }
     auto do_init() noexcept -> void
     {
@@ -251,11 +271,12 @@ private:
         if (processing_) { return; }
 
         if (0 < queue_.size()) {
-            auto& msg = queue_.front();
-            const auto bytes = msg->Total();
+            auto& [bytes, sync] = queue_.front();
+            auto work = MakeWork(api_, WorkType::SyncReply);
+            work->AddFrame(reinterpret_cast<std::uintptr_t>(sync.release()));
             auto lock = Lock{lock_};
 
-            if (OTSocket::send_message(lock, pair_.get(), msg)) {
+            if (OTSocket::send_message(lock, pair_.get(), work)) {
                 processing_ = true;
                 queued_bytes_ -= bytes;
                 queue_.pop();
@@ -357,6 +378,7 @@ private:
 
                     if (State::Init == state_.load()) {
                         timer_.reset();
+                        begin_sync_ = Clock::now();
                         state_.store(State::Sync);
                     }
                 } break;
@@ -412,7 +434,15 @@ private:
             case State::Sync: {
                 do_sync();
 
-                if (is_idle()) { state_.store(State::Run); }
+                if (is_idle()) {
+                    const auto time =
+                        std::chrono::duration_cast<std::chrono::seconds>(
+                            Clock::now() - begin_sync_);
+                    LogOutput(DisplayString(chain_))(" sync completed in ")(
+                        time.count())(" seconds.")
+                        .Flush();
+                    state_.store(State::Run);
+                }
             } break;
             case State::Run:
             default: {
@@ -477,8 +507,8 @@ private:
         }
 
         if (blank() == queue_position_) {
-            const auto base = sync::Factory(api_, queue_.back());
-            update_queue_position(base->asData());
+            const auto& base = *queue_.back().second;
+            update_queue_position(base.asData());
         }
     }
     auto update_queue_position(const sync::Data& data) noexcept -> void

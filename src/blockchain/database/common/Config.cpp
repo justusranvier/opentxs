@@ -67,7 +67,7 @@ auto Configuration::AddSyncServer(const std::string& endpoint) const noexcept
         nullptr,
         MDB_NODUPDATA);
 
-    if (success) {
+    if (success && (MDB_KEYEXIST != code)) {
         auto work =
             api_.Network().ZeroMQ().TaggedMessage(WorkType::SyncServerUpdated);
         work->AddFrame(endpoint);
