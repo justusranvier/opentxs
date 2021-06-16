@@ -48,7 +48,7 @@ class Context;
 namespace opentxs::factory
 {
 auto BlockchainNetworkAPI(
-    const api::Core& api,
+    const api::internal::Core& api,
     const api::Endpoints& endpoints,
     const opentxs::network::zeromq::Context& zmq) noexcept
     -> api::network::Blockchain::Imp*;

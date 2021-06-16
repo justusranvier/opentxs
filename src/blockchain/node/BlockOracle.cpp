@@ -34,7 +34,7 @@ namespace opentxs::factory
 auto BlockOracle(
     const api::Core& api,
     const api::network::internal::Blockchain& network,
-    const blockchain::node::internal::Network& node,
+    const blockchain::node::internal::Manager& node,
     const blockchain::node::internal::HeaderOracle& header,
     const blockchain::node::internal::BlockDatabase& db,
     const blockchain::Type chain,
@@ -53,7 +53,7 @@ namespace opentxs::blockchain::node::implementation
 BlockOracle::BlockOracle(
     const api::Core& api,
     const api::network::internal::Blockchain& network,
-    const internal::Network& node,
+    const internal::Manager& node,
     const internal::HeaderOracle& header,
     const internal::BlockDatabase& db,
     const blockchain::Type chain,

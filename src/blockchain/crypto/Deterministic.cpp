@@ -101,7 +101,7 @@ auto Deterministic::accept(
 #endif  // OT_CRYPTO_WITH_BIP32
 
 auto Deterministic::BalanceElement(const Subchain type, const Bip32Index index)
-    const noexcept(false) -> const internal::Element&
+    const noexcept(false) -> const crypto::Element&
 {
     auto lock = rLock{lock_};
 

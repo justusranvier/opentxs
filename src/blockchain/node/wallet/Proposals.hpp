@@ -73,7 +73,7 @@ namespace node
 {
 namespace internal
 {
-struct Network;
+struct Manager;
 struct WalletDatabase;
 }  // namespace internal
 }  // namespace node
@@ -95,7 +95,7 @@ public:
     Proposals(
         const api::Core& api,
         const api::client::Blockchain& crypto,
-        const node::internal::Network& node,
+        const node::internal::Manager& node,
         const node::internal::WalletDatabase& db,
         const Type chain) noexcept;
     ~Proposals();

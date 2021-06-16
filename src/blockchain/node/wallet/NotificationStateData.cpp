@@ -51,7 +51,7 @@ namespace opentxs::blockchain::node::wallet
 NotificationStateData::NotificationStateData(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
-    const node::internal::Network& node,
+    const node::internal::Manager& node,
     const WalletDatabase& db,
     const SimpleCallback& taskFinished,
     Outstanding& jobCounter,

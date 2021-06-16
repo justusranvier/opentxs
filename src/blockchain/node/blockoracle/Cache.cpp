@@ -40,7 +40,7 @@ const std::chrono::seconds BlockOracle::Cache::download_timeout_{15};
 
 BlockOracle::Cache::Cache(
     const api::Core& api,
-    const internal::Network& node,
+    const internal::Manager& node,
     const internal::BlockDatabase& db,
     const network::zeromq::socket::Publish& socket,
     const blockchain::Type chain) noexcept

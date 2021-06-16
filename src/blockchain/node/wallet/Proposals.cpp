@@ -74,7 +74,7 @@ public:
 
     Imp(const api::Core& api,
         const api::client::Blockchain& crypto,
-        const node::internal::Network& node,
+        const node::internal::Manager& node,
         const node::internal::WalletDatabase& db,
         const Type chain) noexcept
         : api_(api)
@@ -193,7 +193,7 @@ private:
 
     const api::Core& api_;
     const api::client::Blockchain& crypto_;
-    const node::internal::Network& node_;
+    const node::internal::Manager& node_;
     const node::internal::WalletDatabase& db_;
     const Type chain_;
     mutable std::mutex lock_;
@@ -482,7 +482,7 @@ private:
 Proposals::Proposals(
     const api::Core& api,
     const api::client::Blockchain& crypto,
-    const node::internal::Network& node,
+    const node::internal::Manager& node,
     const node::internal::WalletDatabase& db,
     const Type chain) noexcept
     : imp_(std::make_unique<Imp>(api, crypto, node, db, chain))

@@ -124,7 +124,7 @@ public:
     Wallet(
         const api::Core& api,
         const api::client::internal::Blockchain& crypto,
-        const node::internal::Network& parent,
+        const node::internal::Manager& parent,
         const node::internal::WalletDatabase& db,
         const Type chain,
         const std::string& shutdown) noexcept;
@@ -146,7 +146,7 @@ private:
 
     using DBUTXOs = std::vector<node::internal::WalletDatabase::UTXO>;
 
-    const node::internal::Network& parent_;
+    const node::internal::Manager& parent_;
     const node::internal::WalletDatabase& db_;
     const api::client::internal::Blockchain& crypto_;
     const Type chain_;

@@ -46,7 +46,7 @@ struct BlockOracle;
 struct Config;
 struct FilterOracle;
 struct HeaderOracle;
-struct Network;
+struct Manager;
 struct PeerManager;
 }  // namespace internal
 }  // namespace node
@@ -81,7 +81,7 @@ public:
     Peer(
         const api::Core& api,
         const node::internal::Config& config,
-        const node::internal::Network& network,
+        const node::internal::Manager& network,
         const node::internal::HeaderOracle& header,
         const node::internal::FilterOracle& filter,
         const node::internal::BlockOracle& block,

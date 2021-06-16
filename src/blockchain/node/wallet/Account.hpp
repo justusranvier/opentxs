@@ -42,7 +42,7 @@ namespace node
 {
 namespace internal
 {
-struct Network;
+struct Manager;
 struct WalletDatabase;
 }  // namespace internal
 
@@ -82,7 +82,7 @@ public:
         const api::Core& api,
         const api::client::internal::Blockchain& crypto,
         const BalanceTree& ref,
-        const node::internal::Network& node,
+        const node::internal::Manager& node,
         const node::internal::WalletDatabase& db,
         const network::zeromq::socket::Push& threadPool,
         const filter::Type filter,

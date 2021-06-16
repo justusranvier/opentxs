@@ -42,7 +42,7 @@ namespace opentxs::factory
 auto BlockchainWallet(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
-    const blockchain::node::internal::Network& parent,
+    const blockchain::node::internal::Manager& parent,
     const blockchain::node::internal::WalletDatabase& db,
     const blockchain::Type chain,
     const std::string& shutdown)
@@ -60,7 +60,7 @@ namespace opentxs::blockchain::node::implementation
 Wallet::Wallet(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
-    const node::internal::Network& parent,
+    const node::internal::Manager& parent,
     const node::internal::WalletDatabase& db,
     const Type chain,
     const std::string& shutdown) noexcept

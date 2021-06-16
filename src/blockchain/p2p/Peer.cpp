@@ -37,7 +37,7 @@ namespace opentxs::blockchain::p2p::implementation
 Peer::Peer(
     const api::Core& api,
     const node::internal::Config& config,
-    const node::internal::Network& network,
+    const node::internal::Manager& network,
     const node::internal::FilterOracle& filter,
     const node::internal::BlockOracle& block,
     const node::internal::PeerManager& manager,

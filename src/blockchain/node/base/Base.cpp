@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "blockchain/node/base/SyncClient.hpp"
+#include "blockchain/node/base/SyncPipeline.hpp"
 #include "blockchain/node/base/SyncServer.hpp"
 #include "internal/api/client/Client.hpp"
 #include "internal/api/network/Network.hpp"
@@ -128,7 +129,7 @@ struct NullWallet final : public node::internal::Wallet {
 };
 
 Base::Base(
-    const api::Core& api,
+    const api::internal::Core& api,
     const api::client::internal::Blockchain& crypto,
     const api::network::internal::Blockchain& network,
     const Type type,
@@ -226,23 +227,20 @@ Base::Base(
             return std::unique_ptr<base::SyncClient>{};
         }
     }())
-    , sync_cb_(
-          zmq::ListenCallback::Factory([&](auto& m) { pipeline_->Push(m); }))
-    , sync_socket_([&] {
-        auto out = api_.Network().ZeroMQ().PairSocket(
-            sync_cb_, [&]() -> auto& {
-                if (sync_client_) {
+    , sync_pipeline_([&] {
+        if (config_.use_sync_server_) {
+            using Work = api::internal::ThreadPool::Work;
+            api_.ThreadPool().Register(
+                value(Work::SyncDataFiltersIncoming), [](const auto& work) {
+                    base::SyncPipeline::ProcessThreadPool(work);
+                });
 
-                    return sync_client_->Endpoint();
-                } else {
-                    static const auto dummy =
-                        std::string{"inproc://dummy_sync_client"};
+            return std::make_unique<base::SyncPipeline>(
+                api_, *this, header_, filters_, sync_client_->Endpoint());
+        } else {
 
-                    return dummy;
-                }
-            }());
-
-        return out;
+            return std::unique_ptr<base::SyncPipeline>{};
+        }
     }())
     , local_chain_height_(0)
     , remote_chain_height_(
@@ -461,13 +459,7 @@ auto Base::Listen(const p2p::Address& address) const noexcept -> bool
 
 auto Base::notify_sync_client() const noexcept -> void
 {
-    if (sync_client_) {
-        const auto tip = filters_.FilterTip(filters_.DefaultType());
-        auto msg = MakeWork(OTZMQWorkType{OT_ZMQ_INTERNAL_SIGNAL + 2});
-        msg->AddFrame(tip.first);
-        msg->AddFrame(tip.second);
-        sync_socket_->Send(msg);
-    }
+    if (sync_pipeline_) { sync_pipeline_->Init(); }
 }
 
 auto Base::pipeline(zmq::Message& in) noexcept -> void
@@ -843,51 +835,7 @@ auto Base::process_send_to_payment_code(network::zeromq::Message& in) noexcept
 
 auto Base::process_sync_data(network::zeromq::Message& in) noexcept -> void
 {
-    const auto start = Clock::now();
-    const auto body = in.Body();
-
-    OT_ASSERT(1 < body.size());
-
-    using Base = opentxs::network::blockchain::sync::Base;
-    const auto base = std::unique_ptr<Base>(
-        reinterpret_cast<Base*>(body.at(1).as<std::uintptr_t>()));
-
-    OT_ASSERT(base);
-
-    const auto& data = base->asData();
-
-    {
-        const auto& state = data.State();
-
-        if (state.Chain() != chain_) {
-            LogOutput(OT_METHOD)(__FUNCTION__)(": Wrong chain").Flush();
-
-            return;
-        }
-
-        remote_chain_height_.store(
-            std::max(state.Position().first, remote_chain_height_.load()));
-    }
-
-    auto prior = block::BlankHash();
-    auto hashes = std::vector<block::pHash>{};
-    const auto accepted = header_.ProcessSyncData(prior, hashes, data);
-
-    if (0u == accepted) { return; }
-
-    const auto& blocks = data.Blocks();
-
-    LogVerbose("Accepted ")(accepted)(" of ")(blocks.size())(" ")(
-        DisplayString(chain_))(" headers")
-        .Flush();
-    filters_.ProcessSyncData(prior, hashes, data);
-    const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-        Clock::now() - start);
-    LogDetail("Processed ")(blocks.size())(" ")(DisplayString(chain_))(
-        " sync packets in ")(elapsed.count())(" microseconds (")(
-        blocks.size() * 1000000 / elapsed.count())(" blocks/sec)")
-        .Flush();
-    notify_sync_client();
+    // FIXME
 }
 
 auto Base::Reorg() const noexcept -> const network::zeromq::socket::Publish&
@@ -1178,6 +1126,13 @@ auto Base::UpdateLocalHeight(const block::Position position) const noexcept
         .Flush();
     local_chain_height_.store(height);
     trigger();
+}
+
+auto Base::UpdateRemoteHeight(const block::Position position) const noexcept
+    -> void
+{
+    remote_chain_height_ =
+        std::max(remote_chain_height_.load(), position.first);
 }
 
 Base::~Base() { Shutdown().get(); }

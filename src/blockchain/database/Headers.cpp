@@ -54,7 +54,7 @@ auto tsv(const Input& in) noexcept -> ReadView
 
 Headers::Headers(
     const api::Core& api,
-    const node::internal::Network& network,
+    const node::internal::Manager& network,
     const common::Database& common,
     const opentxs::storage::lmdb::LMDB& lmdb,
     const blockchain::Type type) noexcept

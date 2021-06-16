@@ -49,7 +49,7 @@ PeerManager::Peers::Peers(
     const api::Core& api,
     const api::network::internal::Blockchain& network,
     const internal::Config& config,
-    const internal::Network& node,
+    const internal::Manager& node,
     const internal::HeaderOracle& headers,
     const internal::FilterOracle& filter,
     const internal::BlockOracle& block,

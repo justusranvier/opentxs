@@ -116,7 +116,7 @@ struct Accounts::Imp {
 
     Imp(const api::Core& api,
         const api::client::internal::Blockchain& crypto,
-        const node::internal::Network& node,
+        const node::internal::Manager& node,
         const node::internal::WalletDatabase& db,
         const network::zeromq::socket::Push& socket,
         const Type chain,
@@ -146,7 +146,7 @@ private:
 
     const api::Core& api_;
     const api::client::internal::Blockchain& crypto_;
-    const node::internal::Network& node_;
+    const node::internal::Manager& node_;
     const node::internal::WalletDatabase& db_;
     const network::zeromq::socket::Push& thread_pool_;
     const SimpleCallback& task_finished_;
@@ -199,7 +199,7 @@ private:
 Accounts::Accounts(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
-    const node::internal::Network& node,
+    const node::internal::Manager& node,
     const node::internal::WalletDatabase& db,
     const network::zeromq::socket::Push& socket,
     const Type chain,

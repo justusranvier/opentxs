@@ -320,9 +320,11 @@ struct FilterOracle : virtual public node::FilterOracle {
     virtual auto ProcessBlock(const block::bitcoin::Block& block) const noexcept
         -> bool = 0;
     virtual auto ProcessSyncData(
-        const block::Hash& prior,
-        const std::vector<block::pHash>& hashes,
-        const network::blockchain::sync::Data& data) const noexcept -> void = 0;
+        const filter::Type type,
+        const block::Position& tip,
+        const std::vector<FilterDatabase::Filter>& cfilters,
+        const std::vector<FilterDatabase::Header>& cfheaders) const noexcept
+        -> void = 0;
     virtual auto Tip(const filter::Type type) const noexcept
         -> block::Position = 0;
 
@@ -346,11 +348,6 @@ struct HeaderOracle : virtual public node::HeaderOracle {
     virtual auto Init() noexcept -> void = 0;
     virtual auto LoadBitcoinHeader(const block::Hash& hash) const noexcept
         -> std::unique_ptr<block::bitcoin::Header> = 0;
-    virtual auto ProcessSyncData(
-        block::Hash& prior,
-        std::vector<block::pHash>& hashes,
-        const network::blockchain::sync::Data& data) noexcept
-        -> std::size_t = 0;
 
     ~HeaderOracle() override = default;
 };
@@ -454,7 +451,7 @@ struct PeerManager {
     virtual ~PeerManager() = default;
 };
 
-struct OPENTXS_EXPORT Network : virtual public node::Manager {
+struct OPENTXS_EXPORT Manager : virtual public node::Manager {
     enum class Task : OTZMQWorkType {
         Shutdown = value(WorkType::Shutdown),
         SyncReply = value(WorkType::SyncReply),
@@ -503,12 +500,14 @@ struct OPENTXS_EXPORT Network : virtual public node::Manager {
         -> void = 0;
     virtual auto UpdateLocalHeight(
         const block::Position position) const noexcept -> void = 0;
+    virtual auto UpdateRemoteHeight(
+        const block::Position position) const noexcept -> void = 0;
 
     virtual auto HeaderOracleInternal() noexcept -> internal::HeaderOracle& = 0;
     virtual auto FilterOracleInternal() noexcept -> internal::FilterOracle& = 0;
     virtual auto Shutdown() noexcept -> std::shared_future<void> = 0;
 
-    ~Network() override = default;
+    ~Manager() override = default;
 };
 
 struct SyncDatabase {

@@ -43,7 +43,7 @@ public:
         const api::Core& api,
         const internal::FilterDatabase& db,
         const internal::HeaderOracle& header,
-        const internal::Network& node,
+        const internal::Manager& node,
         FilterOracle::FilterDownloader& filter,
         const blockchain::Type chain,
         const filter::Type type,
@@ -84,7 +84,7 @@ private:
 
     const internal::FilterDatabase& db_;
     const internal::HeaderOracle& header_;
-    const internal::Network& node_;
+    const internal::Manager& node_;
     FilterOracle::FilterDownloader& filter_;
     const blockchain::Type chain_;
     const filter::Type type_;

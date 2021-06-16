@@ -70,7 +70,7 @@ public:
         const node::internal::SyncDatabase& db,
         const node::internal::HeaderOracle& header,
         const node::internal::FilterOracle& filter,
-        const node::internal::Network& node,
+        const node::internal::Manager& node,
         const blockchain::Type chain,
         const filter::Type type,
         const std::string& shutdown,
@@ -120,7 +120,7 @@ private:
     const node::internal::SyncDatabase& db_;
     const node::internal::HeaderOracle& header_;
     const node::internal::FilterOracle& filter_;
-    const node::internal::Network& node_;
+    const node::internal::Manager& node_;
     const blockchain::Type chain_;
     const filter::Type type_;
     const int linger_;

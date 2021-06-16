@@ -67,7 +67,7 @@ namespace opentxs::factory
 auto BitcoinP2PPeerLegacy(
     const api::Core& api,
     const blockchain::node::internal::Config& config,
-    const blockchain::node::internal::Network& network,
+    const blockchain::node::internal::Manager& network,
     const blockchain::node::internal::HeaderOracle& header,
     const blockchain::node::internal::FilterOracle& filter,
     const blockchain::node::internal::BlockOracle& block,
@@ -160,7 +160,7 @@ const std::string Peer::user_agent_{"/opentxs:" OPENTXS_VERSION_STRING "/"};
 Peer::Peer(
     const api::Core& api,
     const node::internal::Config& config,
-    const node::internal::Network& network,
+    const node::internal::Manager& network,
     const node::internal::HeaderOracle& header,
     const node::internal::FilterOracle& filter,
     const node::internal::BlockOracle& block,
@@ -421,7 +421,7 @@ auto Peer::process_block(
         }
 
         if (submit) {
-            using Task = node::internal::Network::Task;
+            using Task = node::internal::Manager::Task;
             auto work = MakeWork(Task::SubmitBlock);
             work->AddFrame(payload);
             network_.Submit(work);
@@ -1203,7 +1203,7 @@ auto Peer::process_headers(
         check_verify();
     } else {
         get_headers_.Finish();
-        using Task = node::internal::Network::Task;
+        using Task = node::internal::Manager::Task;
         auto work = MakeWork(Task::SubmitBlockHeader);
 
         for (const auto& header : message) {

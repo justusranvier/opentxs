@@ -76,7 +76,7 @@ OPENTXS_EXPORT auto BitcoinP2PMessage(
 auto BitcoinP2PPeerLegacy(
     const api::Core& api,
     const blockchain::node::internal::Config& config,
-    const blockchain::node::internal::Network& network,
+    const blockchain::node::internal::Manager& network,
     const blockchain::node::internal::HeaderOracle& header,
     const blockchain::node::internal::FilterOracle& filter,
     const blockchain::node::internal::BlockOracle& block,

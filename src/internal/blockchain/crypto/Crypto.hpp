@@ -247,8 +247,6 @@ struct Subaccount : virtual public crypto::Subaccount {
         const std::vector<Activity>& spent,
         std::set<OTIdentifier>& contacts,
         const PasswordPrompt& reason) const noexcept -> bool = 0;
-    virtual auto BalanceElement(const Subchain type, const Bip32Index index)
-        const noexcept(false) -> const internal::Element& override = 0;
     virtual auto IncomingTransactions(const Key& key) const noexcept
         -> std::set<std::string> = 0;
     virtual auto PrivateKey(

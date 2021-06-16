@@ -105,7 +105,7 @@ namespace opentxs::blockchain::node::wallet
 SubchainStateData::SubchainStateData(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
-    const node::internal::Network& node,
+    const node::internal::Manager& node,
     const WalletDatabase& db,
     OTNymID&& owner,
     OTIdentifier&& id,

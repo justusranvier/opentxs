@@ -42,7 +42,7 @@ public:
         const api::Core& api,
         const internal::BlockDatabase& db,
         const internal::HeaderOracle& header,
-        const internal::Network& node,
+        const internal::Manager& node,
         const blockchain::Type chain,
         const std::string& shutdown) noexcept
         : BlockDM(
@@ -78,7 +78,7 @@ private:
 
     const internal::BlockDatabase& db_;
     const internal::HeaderOracle& header_;
-    const internal::Network& node_;
+    const internal::Manager& node_;
     const blockchain::Type chain_;
     OTZMQPublishSocket socket_;
 

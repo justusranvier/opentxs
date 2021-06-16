@@ -51,7 +51,7 @@ namespace opentxs::blockchain::node::wallet
 DeterministicStateData::DeterministicStateData(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
-    const node::internal::Network& node,
+    const node::internal::Manager& node,
     const WalletDatabase& db,
     const crypto::Deterministic& subaccount,
     const SimpleCallback& taskFinished,

@@ -55,6 +55,11 @@ struct Blockchain;
 }  // namespace internal
 }  // namespace client
 
+namespace internal
+{
+struct Core;
+}  // namespace internal
+
 namespace network
 {
 namespace internal
@@ -92,6 +97,7 @@ namespace node
 namespace base
 {
 class SyncClient;
+class SyncPipeline;
 class SyncServer;
 }  // namespace base
 }  // namespace node
@@ -127,8 +133,8 @@ namespace zmq = opentxs::network::zeromq;
 
 namespace opentxs::blockchain::node::implementation
 {
-class Base : virtual public node::internal::Network,
-             public Worker<Base, api::Core>
+class Base : virtual public node::internal::Manager,
+             public Worker<Base, api::internal::Core>
 {
 public:
     enum class Work : OTZMQWorkType {
@@ -215,6 +221,8 @@ public:
     auto UpdateHeight(const block::Height height) const noexcept -> void final;
     auto UpdateLocalHeight(const block::Position position) const noexcept
         -> void final;
+    auto UpdateRemoteHeight(const block::Position position) const noexcept
+        -> void final;
 
     auto Connect() noexcept -> bool final;
     auto Disconnect() noexcept -> bool final;
@@ -262,7 +270,7 @@ protected:
     auto init() noexcept -> void;
 
     Base(
-        const api::Core& api,
+        const api::internal::Core& api,
         const api::client::internal::Blockchain& crypto,
         const api::network::internal::Blockchain& network,
         const Type type,
@@ -271,7 +279,7 @@ protected:
         const std::string& syncEndpoint) noexcept;
 
 private:
-    friend Worker<Base, api::Core>;
+    friend Worker<Base, api::internal::Core>;
 
     enum class State : int {
         UpdatingHeaders,
@@ -338,8 +346,7 @@ private:
     const std::string sync_endpoint_;
     std::unique_ptr<base::SyncServer> sync_server_;
     std::unique_ptr<base::SyncClient> sync_client_;
-    OTZMQListenCallback sync_cb_;
-    OTZMQPairSocket sync_socket_;
+    std::unique_ptr<base::SyncPipeline> sync_pipeline_;
     mutable std::atomic<block::Height> local_chain_height_;
     mutable std::atomic<block::Height> remote_chain_height_;
     OTFlag waiting_for_headers_;

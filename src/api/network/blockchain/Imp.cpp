@@ -40,7 +40,7 @@
 namespace opentxs::api::network
 {
 BlockchainImp::BlockchainImp(
-    const api::Core& api,
+    const api::internal::Core& api,
     const api::Endpoints& endpoints,
     const opentxs::network::zeromq::Context& zmq) noexcept
     : api_(api)
@@ -123,9 +123,6 @@ BlockchainImp::BlockchainImp(
     const auto& pool = api_.ThreadPool();
     pool.Register(value(Work::BlockchainWallet), [](const auto& work) {
         Wallet::ProcessThreadPool(work);
-    });
-    pool.Register(value(Work::SyncDataFiltersIncoming), [](const auto& work) {
-        Filters::ProcessThreadPool(work);
     });
     pool.Register(value(Work::CalculateBlockFilters), [](const auto& work) {
         Filters::ProcessThreadPool(work);

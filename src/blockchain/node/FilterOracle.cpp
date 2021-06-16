@@ -63,7 +63,7 @@ auto BlockchainFilterOracle(
     const api::Core& api,
     const api::network::internal::Blockchain& network,
     const blockchain::node::internal::Config& config,
-    const blockchain::node::internal::Network& node,
+    const blockchain::node::internal::Manager& node,
     const blockchain::node::internal::HeaderOracle& header,
     const blockchain::node::internal::BlockOracle& block,
     const blockchain::node::internal::FilterDatabase& database,
@@ -78,44 +78,11 @@ auto BlockchainFilterOracle(
 
 namespace opentxs::blockchain::node::implementation
 {
-struct FilterOracle::SyncClientFilterData {
-    using Future = std::future<filter::pHeader>;
-    using Promise = std::promise<filter::pHeader>;
-
-    const block::Hash& block_hash_;
-    const network::blockchain::sync::Block& incoming_data_;
-    filter::pHash filter_hash_;
-    internal::FilterDatabase::Filter& filter_data_;
-    internal::FilterDatabase::Header& header_data_;
-    Outstanding& job_counter_;
-    Future previous_header_;
-    Promise calculated_header_;
-
-    SyncClientFilterData(
-        OTData blank,
-        const block::Hash& block,
-        const network::blockchain::sync::Block& data,
-        internal::FilterDatabase::Filter& filter,
-        internal::FilterDatabase::Header& header,
-        Outstanding& jobCounter,
-        Future&& previous) noexcept
-        : block_hash_(block)
-        , incoming_data_(data)
-        , filter_hash_(std::move(blank))
-        , filter_data_(filter)
-        , header_data_(header)
-        , job_counter_(jobCounter)
-        , previous_header_(std::move(previous))
-        , calculated_header_()
-    {
-    }
-};
-
 FilterOracle::FilterOracle(
     const api::Core& api,
     const api::network::internal::Blockchain& network,
     const internal::Config& config,
-    const internal::Network& node,
+    const internal::Manager& node,
     const internal::HeaderOracle& header,
     const internal::BlockOracle& block,
     const internal::FilterDatabase& database,
@@ -536,190 +503,21 @@ auto FilterOracle::ProcessBlock(BlockIndexerData& data) const noexcept -> void
 }
 
 auto FilterOracle::ProcessSyncData(
-    const block::Hash& prior,
-    const std::vector<block::pHash>& hashes,
-    const network::blockchain::sync::Data& data) const noexcept -> void
+    const filter::Type type,
+    const block::Position& tip,
+    const std::vector<internal::FilterDatabase::Filter>& cfilters,
+    const std::vector<internal::FilterDatabase::Header>& cfheaders)
+    const noexcept -> void
 {
-    auto filters = std::vector<internal::FilterDatabase::Filter>{};
-    auto headers = std::vector<internal::FilterDatabase::Header>{};
-    auto cache = std::vector<SyncClientFilterData>{};
-    const auto& blocks = data.Blocks();
-    const auto filterType = blocks.front().FilterType();
-    const auto count{std::min<std::size_t>(hashes.size(), blocks.size())};
+    const auto stored = database_.StoreFilters(type, cfheaders, cfilters, tip);
 
-    {
-        auto jobCounter = outstanding_jobs_.Allocate();
-
-        OT_ASSERT(0 < count);
-
-        filters.reserve(count);
-        headers.reserve(count);
-        cache.reserve(count);
-        auto previous = [&] {
-            if (prior.empty()) {
-
-                return block::BlankHash();
-            } else {
-
-                auto output = LoadFilterHeader(filterType, prior);
-
-                if (output->empty()) {
-                    LogOutput(OT_METHOD)(__FUNCTION__)(": cfheader for ")(
-                        DisplayString(chain_))(" block ")(prior.asHex())(
-                        " not found")
-                        .Flush();
-
-                    throw std::runtime_error("Non-contiguous filters");
-                }
-
-                return output;
-            }
-        }();
-        static const auto blank = api_.Factory().Data();
-        static const auto blankView = ReadView{};
-        auto before{cache.begin()};
-        auto first{true};
-
-        for (auto i = std::size_t{0u}; i < count; ++i) {
-            auto& filter = filters.emplace_back(blankView, nullptr);
-            auto& header = headers.emplace_back(blank, blank, blankView);
-            auto& job = cache.emplace_back(
-                blank,
-                hashes.at(i),
-                blocks.at(i),
-                filter,
-                header,
-                jobCounter,
-                [&] {
-                    if (first) {
-                        first = false;
-                        auto promise = std::promise<filter::pHeader>{};
-                        auto post = ScopeGuard{[&] {
-                            before = cache.begin();
-                            promise.set_value(std::move(previous));
-                        }};
-
-                        return promise.get_future();
-                    } else {
-                        auto post =
-                            ScopeGuard{[&] { std::advance(before, 1); }};
-
-                        return before->calculated_header_.get_future();
-                    }
-                }());
-
-            while (running_ && jobCounter.limited()) {
-                Sleep(std::chrono::microseconds(1));
-            }
-
-            if (false == running_) { return; }
-
-            using Pool = api::internal::ThreadPool;
-            auto work = Pool::MakeWork(
-                api_.Network().ZeroMQ(),
-                value(Pool::Work::SyncDataFiltersIncoming));
-            work->AddFrame(reinterpret_cast<std::uintptr_t>(this));
-            work->AddFrame(reinterpret_cast<std::uintptr_t>(&job));
-            thread_pool_->Send(work);
-            ++jobCounter;
-        }
-    }
-
-    try {
-        auto future = cache.back().calculated_header_.get_future();
-        future.get();
-        const auto tip = [&] {
-            const auto back = count - 1u;
-
-            return block::Position{blocks.at(back).Height(), hashes.at(back)};
-        }();
-        make_blank<block::Position>::value(api_);
-        const auto stored =
-            database_.StoreFilters(filterType, headers, filters, tip);
-
-        if (stored) {
-            LogDetail(DisplayString(chain_))(
-                " cfheader and cfilter chain updated to height ")(tip.first)
-                .Flush();
-            cb_(filterType, tip);
-        } else {
-            LogOutput(OT_METHOD)(__FUNCTION__)(": Database error ").Flush();
-        }
-    } catch (const std::exception& e) {
-        LogOutput(OT_METHOD)(__FUNCTION__)(": ")(e.what()).Flush();
-
-        return;
-    }
-}
-
-auto FilterOracle::ProcessSyncData(SyncClientFilterData& data) const noexcept
-    -> void
-{
-    auto post = ScopeGuard{[&] { --data.job_counter_; }};
-
-    try {
-        const auto& block = data.block_hash_;
-        const auto height = data.incoming_data_.Height();
-        const auto type = data.incoming_data_.FilterType();
-        const auto count = data.incoming_data_.FilterElements();
-        const auto bytes = data.incoming_data_.Filter();
-        LogTrace(OT_METHOD)(__FUNCTION__)(": Received filter for ")(
-            DisplayString(chain_))(" block at height ")(height)
+    if (stored) {
+        LogDetail(DisplayString(chain_))(
+            " cfheader and cfilter chain updated to height ")(tip.first)
             .Flush();
-        auto& [blockHashView, pGCS] = data.filter_data_;
-        auto& [blockHash, filterHeader, filterHashView] = data.header_data_;
-        blockHash = block;
-        blockHashView = blockHash->Bytes();
-        const auto params = blockchain::internal::GetFilterParams(type);
-        pGCS = factory::GCS(
-            api_,
-            params.first,
-            params.second,
-            blockchain::internal::BlockHashToFilterKey(block.Bytes()),
-            count,
-            bytes);
-
-        if (false == bool(pGCS)) {
-            LogOutput(OT_METHOD)(__FUNCTION__)(": Failed to instantiate ")(
-                DisplayString(chain_))(" cfilter #")(height)
-                .Flush();
-
-            throw std::runtime_error("Failed to instantiate gcs");
-        }
-
-        const auto& gcs = *pGCS;
-        data.filter_hash_ = gcs.Hash();
-        filterHashView = data.filter_hash_->Bytes();
-        auto& previous = data.previous_header_;
-        constexpr auto limit = std::chrono::minutes{2};
-        using State = std::future_status;
-
-        if (auto status = previous.wait_for(limit); State::ready != status) {
-            LogOutput(OT_METHOD)(__FUNCTION__)(
-                ": Timeout waiting for previous ")(DisplayString(chain_))(
-                " cfheader #")(height - 1)
-                .Flush();
-
-            throw std::runtime_error("timeout");
-        }
-
-        filterHeader = gcs.Header(previous.get()->Bytes());
-
-        if (filterHeader->empty()) {
-            LogOutput(OT_METHOD)(__FUNCTION__)(": failed to calculate ")(
-                DisplayString(chain_))(" cfheader #")(height)
-                .Flush();
-
-            throw std::runtime_error("Failed to calculate cfheader");
-        }
-
-        data.calculated_header_.set_value(filterHeader);
-        LogTrace(OT_METHOD)(__FUNCTION__)(
-            ": Finished calculating cfheader and cfilter for ")(
-            DisplayString(chain_))(" block at height ")(height)
-            .Flush();
-    } catch (...) {
-        data.calculated_header_.set_exception(std::current_exception());
+        cb_(type, tip);
+    } else {
+        LogOutput(OT_METHOD)(__FUNCTION__)(": Database error ").Flush();
     }
 }
 
@@ -910,15 +708,6 @@ auto FilterOracle::ProcessThreadPool(const zmq::Message& in) noexcept -> void
     }();
 
     switch (work) {
-        case Work::SyncDataFiltersIncoming: {
-            auto* pData = reinterpret_cast<Imp::SyncClientFilterData*>(
-                body.at(1).as<std::uintptr_t>());
-
-            OT_ASSERT(nullptr != pData);
-
-            auto& data = *pData;
-            filterOracle.ProcessSyncData(data);
-        } break;
         case Work::CalculateBlockFilters: {
             auto* pData = reinterpret_cast<Imp::BlockIndexerData*>(
                 body.at(1).as<std::uintptr_t>());

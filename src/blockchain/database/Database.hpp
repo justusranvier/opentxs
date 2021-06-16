@@ -499,7 +499,7 @@ public:
     Database(
         const api::Core& api,
         const api::client::internal::Blockchain& blockchain,
-        const node::internal::Network& network,
+        const node::internal::Manager& network,
         const database::common::Database& common,
         const blockchain::Type type) noexcept;
 

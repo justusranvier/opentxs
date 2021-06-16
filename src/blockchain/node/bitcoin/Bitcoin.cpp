@@ -23,14 +23,14 @@
 namespace opentxs::factory
 {
 auto BlockchainNetworkBitcoin(
-    const api::Core& api,
+    const api::internal::Core& api,
     const api::client::internal::Blockchain& crypto,
     const api::network::internal::Blockchain& network,
     const blockchain::Type type,
     const blockchain::node::internal::Config& config,
     const std::string& seednode,
     const std::string& syncEndpoint) noexcept
-    -> std::unique_ptr<blockchain::node::internal::Network>
+    -> std::unique_ptr<blockchain::node::internal::Manager>
 {
     using ReturnType = blockchain::node::base::Bitcoin;
 
@@ -45,10 +45,10 @@ auto BlockchainNetworkBitcoin(
     const blockchain::node::internal::Config& config,
     const std::string& seednode,
     const std::string& syncEndpoint) noexcept
-    -> std::unique_ptr<blockchain::node::internal::Network>
+    -> std::unique_ptr<blockchain::node::internal::Manager>
 {
     return BlockchainNetworkBitcoin(
-        api,
+        dynamic_cast<const api::internal::Core&>(api),
         crypto,
         api.Network().Blockchain().Internal(),
         type,
@@ -61,7 +61,7 @@ auto BlockchainNetworkBitcoin(
 namespace opentxs::blockchain::node::base
 {
 Bitcoin::Bitcoin(
-    const api::Core& api,
+    const api::internal::Core& api,
     const api::client::internal::Blockchain& crypto,
     const api::network::internal::Blockchain& network,
     const Type type,

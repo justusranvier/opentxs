@@ -25,7 +25,7 @@ namespace opentxs::factory
 auto BlockchainDatabase(
     const api::Core& api,
     const api::client::internal::Blockchain& blockchain,
-    const blockchain::node::internal::Network& network,
+    const blockchain::node::internal::Manager& network,
     const blockchain::database::common::Database& common,
     const blockchain::Type type) noexcept
     -> std::unique_ptr<blockchain::internal::Database>
@@ -59,7 +59,7 @@ const opentxs::storage::lmdb::TableNames Database::table_names_{
 Database::Database(
     const api::Core& api,
     const api::client::internal::Blockchain& blockchain,
-    const node::internal::Network& network,
+    const node::internal::Manager& network,
     const database::common::Database& common,
     const blockchain::Type type) noexcept
     : chain_(type)

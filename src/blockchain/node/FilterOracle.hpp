@@ -112,7 +112,6 @@ public:
     class HeaderDownloader;
     class SyncIndexer;
     struct BlockIndexerData;
-    struct SyncClientFilterData;
 
     using NotifyCallback =
         std::function<void(const filter::Type, const block::Position&)>;
@@ -157,11 +156,11 @@ public:
         -> bool final;
     auto ProcessBlock(BlockIndexerData& data) const noexcept -> void;
     auto ProcessSyncData(
-        const block::Hash& prior,
-        const std::vector<block::pHash>& hashes,
-        const network::blockchain::sync::Data& data) const noexcept
-        -> void final;
-    auto ProcessSyncData(SyncClientFilterData& data) const noexcept -> void;
+        const filter::Type type,
+        const block::Position& tip,
+        const std::vector<internal::FilterDatabase::Filter>& cfilters,
+        const std::vector<internal::FilterDatabase::Header>& cfheaders)
+        const noexcept -> void final;
     auto Tip(const filter::Type type) const noexcept -> block::Position final
     {
         return database_.FilterTip(type);
@@ -174,7 +173,7 @@ public:
         const api::Core& api,
         const api::network::internal::Blockchain& crypto,
         const internal::Config& config,
-        const internal::Network& node,
+        const internal::Manager& node,
         const internal::HeaderOracle& header,
         const internal::BlockOracle& block,
         const internal::FilterDatabase& database,
@@ -196,7 +195,7 @@ private:
     static const CheckpointMap filter_checkpoints_;
 
     const api::Core& api_;
-    const internal::Network& node_;
+    const internal::Manager& node_;
     const internal::HeaderOracle& header_;
     const internal::FilterDatabase& database_;
     const network::zeromq::socket::Publish& filter_notifier_;

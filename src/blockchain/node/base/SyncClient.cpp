@@ -65,10 +65,10 @@ struct SyncClient::Imp {
         , state_(State::Init)
         , api_(api)
         , chain_(chain)
+        , limit_(std::max<Counter>(std::thread::hardware_concurrency(), 8))
         , lock_()
         , begin_sync_()
         , activity_()
-        , processing_(false)
         , dealer_([&] {
             auto out = Socket{
                 ::zmq_socket(api_.Network().ZeroMQ(), ZMQ_DEALER), ::zmq_close};
@@ -123,9 +123,8 @@ struct SyncClient::Imp {
         , local_position_(blank(api_))
         , remote_position_(blank(api_))
         , queue_position_(blank(api_))
-        , queued_bytes_()
-        , queue_()
         , timer_()
+        , active_(0)
         , running_(true)
         , thread_(&Imp::thread, this)
     {
@@ -142,28 +141,25 @@ private:
     using Socket = std::unique_ptr<void, decltype(&::zmq_close)>;
     using OTSocket = opentxs::network::zeromq::socket::implementation::Socket;
     using Task = api::network::blockchain::SyncClient::Task;
-    using Queue = std::
-        pair<std::size_t, std::unique_ptr<network::blockchain::sync::Base>>;
+    using Counter = long long int;
 
     static constexpr int linger_{0};
-    static constexpr std::size_t limit_{64_MiB};
     static constexpr std::chrono::seconds retry_interval_{4};
 
     const api::Core& api_;
     const Type chain_;
+    const Counter limit_;
     mutable std::mutex lock_;
     Time begin_sync_;
     Time activity_;
-    bool processing_;
     Socket dealer_;
     Socket subscribe_;
     Socket pair_;
     block::Position local_position_;
     block::Position remote_position_;
     block::Position queue_position_;
-    std::size_t queued_bytes_;
-    std::queue<Queue> queue_;
     Backoff timer_;
+    Counter active_;
     std::atomic_bool running_;
     std::thread thread_;
 
@@ -182,7 +178,7 @@ private:
     {
         if (local_position_ != remote_position_) { return false; }
 
-        if (0 < queue_.size()) { return false; }
+        if (0 < active_) { return false; }
 
         return true;
     }
@@ -229,30 +225,14 @@ private:
 
         if (0u == blocks.size()) { return; }
 
-        const auto bytes = msg->Total();
-        LogDebug(OT_METHOD)(__FUNCTION__)(": buffering ")(bytes)(
-            " bytes of sync data for ")(DisplayString(chain_))(" blocks ")(
-            blocks.front().Height())(" to ")(blocks.back().Height())
-            .Flush();
         update_queue_position(data);
-        queued_bytes_ += bytes;
+        auto work = MakeWork(api_, WorkType::SyncReply);
+        work->AddFrame(reinterpret_cast<std::uintptr_t>(base.release()));
+        auto lock = Lock{lock_};
 
-        /*
-        if (0 < queue_.size()) {
-            auto& [eBytes, eBase] = queue_.back();
-            auto& existing =
-                const_cast<network::blockchain::sync::Data&>(eBase->asData());
-            auto& incoming = const_cast<network::blockchain::sync::Data&>(data);
-
-            if (existing.Add(std::move(incoming))) {
-                eBytes += bytes;
-
-                return;
-            }
+        if (false == OTSocket::send_message(lock, pair_.get(), work)) {
+            OT_FAIL;
         }
-        */
-
-        queue_.emplace(bytes, std::move(base));
     }
     auto do_init() noexcept -> void
     {
@@ -267,24 +247,6 @@ private:
     auto do_sync() noexcept -> void
     {
         if (need_sync()) { request(next_position()); }
-
-        if (processing_) { return; }
-
-        if (0 < queue_.size()) {
-            auto& [bytes, sync] = queue_.front();
-            auto work = MakeWork(api_, WorkType::SyncReply);
-            work->AddFrame(reinterpret_cast<std::uintptr_t>(sync.release()));
-            auto lock = Lock{lock_};
-
-            if (OTSocket::send_message(lock, pair_.get(), work)) {
-                processing_ = true;
-                queued_bytes_ -= bytes;
-                queue_.pop();
-                update_queue_position();
-            } else {
-                OT_FAIL;
-            }
-        }
     }
     auto need_heartbeat() noexcept -> bool
     {
@@ -324,9 +286,9 @@ private:
             return false;
         }
 
-        if (queued_bytes_ >= limit_) {
+        if (active_ >= limit_) {
             LogTrace(OT_METHOD)(__FUNCTION__)(": ")(DisplayString(chain_))(
-                " buffer is full with ")(queued_bytes_)(" bytes ")
+                " pipeline is full with ")(active_)(" items ")
                 .Flush();
 
             return false;
@@ -410,7 +372,7 @@ private:
                     local_position_ = {
                         body.at(1).as<block::Height>(),
                         api_.Factory().Data(body.at(2).Bytes())};
-                    processing_ = false;
+                    --active_;
                 } break;
                 case Task::Server:
                 case Task::Register:
@@ -496,19 +458,6 @@ private:
 
                 process(item.socket);
             }
-        }
-    }
-    auto update_queue_position() noexcept -> void
-    {
-        if (0 == queue_.size()) {
-            queue_position_ = blank();
-
-            return;
-        }
-
-        if (blank() == queue_position_) {
-            const auto& base = *queue_.back().second;
-            update_queue_position(base.asData());
         }
     }
     auto update_queue_position(const sync::Data& data) noexcept -> void

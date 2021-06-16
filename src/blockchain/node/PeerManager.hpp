@@ -134,7 +134,7 @@ public:
             const api::Core& api,
             const api::network::internal::Blockchain& network,
             const node::internal::Config& config,
-            const node::internal::Network& node,
+            const node::internal::Manager& node,
             const node::internal::HeaderOracle& headers,
             const node::internal::FilterOracle& filter,
             const node::internal::BlockOracle& block,
@@ -156,7 +156,7 @@ public:
 
         const api::Core& api_;
         const node::internal::Config& config_;
-        const node::internal::Network& node_;
+        const node::internal::Manager& node_;
         const node::internal::HeaderOracle& headers_;
         const node::internal::FilterOracle& filter_;
         const node::internal::BlockOracle& block_;
@@ -260,7 +260,7 @@ public:
         const api::Core& api,
         const api::network::internal::Blockchain& network,
         const node::internal::Config& config,
-        const node::internal::Network& node,
+        const node::internal::Manager& node,
         const node::internal::HeaderOracle& headers,
         const node::internal::FilterOracle& filter,
         const node::internal::BlockOracle& block,
@@ -311,7 +311,7 @@ private:
     };
 
     const api::network::internal::Blockchain& network_;
-    const node::internal::Network& node_;
+    const node::internal::Manager& node_;
     const node::internal::PeerDatabase& database_;
     const Type chain_;
     mutable Jobs jobs_;

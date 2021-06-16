@@ -67,7 +67,7 @@ namespace node
 {
 namespace internal
 {
-struct Network;
+struct Manager;
 }  // namespace internal
 }  // namespace node
 }  // namespace blockchain
@@ -107,7 +107,7 @@ public:
     NotificationStateData(
         const api::Core& api,
         const api::client::internal::Blockchain& crypto,
-        const node::internal::Network& node,
+        const node::internal::Manager& node,
         const WalletDatabase& db,
         const SimpleCallback& taskFinished,
         Outstanding& jobCounter,

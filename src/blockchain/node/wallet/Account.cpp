@@ -107,7 +107,7 @@ struct Account::Imp {
     Imp(const api::Core& api,
         const api::client::internal::Blockchain& crypto,
         const BalanceTree& ref,
-        const node::internal::Network& node,
+        const node::internal::Manager& node,
         const node::internal::WalletDatabase& db,
         const zmq::socket::Push& threadPool,
         const filter::Type filter,
@@ -146,7 +146,7 @@ private:
     const api::Core& api_;
     const api::client::internal::Blockchain& crypto_;
     const BalanceTree& ref_;
-    const node::internal::Network& node_;
+    const node::internal::Manager& node_;
     const node::internal::WalletDatabase& db_;
     const filter::Type filter_type_;
     const network::zeromq::socket::Push& thread_pool_;
@@ -197,7 +197,7 @@ Account::Account(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
     const BalanceTree& ref,
-    const node::internal::Network& node,
+    const node::internal::Manager& node,
     const node::internal::WalletDatabase& db,
     const zmq::socket::Push& threadPool,
     const filter::Type filter,

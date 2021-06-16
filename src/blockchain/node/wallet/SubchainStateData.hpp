@@ -141,7 +141,7 @@ protected:
 
     const api::Core& api_;
     const api::client::internal::Blockchain& crypto_;
-    const node::internal::Network& node_;
+    const node::internal::Manager& node_;
     const WalletDatabase& db_;
     const std::string name_;
     const block::Position null_position_;
@@ -168,7 +168,7 @@ protected:
     SubchainStateData(
         const api::Core& api,
         const api::client::internal::Blockchain& crypto,
-        const node::internal::Network& node,
+        const node::internal::Manager& node,
         const WalletDatabase& db,
         OTNymID&& owner,
         OTIdentifier&& id,

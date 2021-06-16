@@ -284,7 +284,7 @@ protected:
         }
     };
 
-    const node::internal::Network& network_;
+    const node::internal::Manager& network_;
     const node::internal::FilterOracle& filter_;
     const node::internal::BlockOracle& block_;
     const node::internal::PeerManager& manager_;
@@ -331,7 +331,7 @@ protected:
     Peer(
         const api::Core& api,
         const node::internal::Config& config,
-        const node::internal::Network& network,
+        const node::internal::Manager& network,
         const node::internal::FilterOracle& filter,
         const node::internal::BlockOracle& block,
         const node::internal::PeerManager& manager,

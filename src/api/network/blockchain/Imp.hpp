@@ -40,6 +40,11 @@ struct Blockchain;
 }  // namespace internal
 }  // namespace client
 
+namespace internal
+{
+struct Core;
+}  // namespace internal
+
 namespace network
 {
 namespace blockchain
@@ -51,7 +56,6 @@ struct SyncServer;
 class Blockchain;
 }  // namespace network
 
-class Core;
 class Endpoints;
 class Legacy;
 }  // namespace api
@@ -79,7 +83,7 @@ namespace node
 namespace internal
 {
 struct Config;
-struct Network;
+struct Manager;
 }  // namespace internal
 }  // namespace node
 }  // namespace blockchain
@@ -152,7 +156,7 @@ struct BlockchainImp final : public Blockchain::Imp {
     auto Shutdown() noexcept -> void final;
 
     BlockchainImp(
-        const api::Core& api,
+        const api::internal::Core& api,
         const api::Endpoints& endpoints,
         const opentxs::network::zeromq::Context& zmq) noexcept;
 
@@ -160,10 +164,10 @@ struct BlockchainImp final : public Blockchain::Imp {
 
 private:
     using Config = opentxs::blockchain::node::internal::Config;
-    using pNode = std::unique_ptr<opentxs::blockchain::node::internal::Network>;
+    using pNode = std::unique_ptr<opentxs::blockchain::node::internal::Manager>;
     using Chains = std::vector<Chain>;
 
-    const api::Core& api_;
+    const api::internal::Core& api_;
     const api::client::internal::Blockchain* crypto_;
     std::unique_ptr<opentxs::blockchain::database::common::Database> db_;
     OTZMQPublishSocket active_peer_updates_;

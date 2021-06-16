@@ -26,6 +26,11 @@ struct Blockchain;
 }  // namespace internal
 }  // namespace client
 
+namespace internal
+{
+struct Core;
+}  // namespace internal
+
 namespace network
 {
 namespace internal
@@ -33,8 +38,6 @@ namespace internal
 struct Blockchain;
 }  // namespace internal
 }  // namespace network
-
-class Core;
 }  // namespace api
 
 namespace blockchain
@@ -57,7 +60,7 @@ namespace node
 namespace internal
 {
 struct Config;
-struct Network;
+struct Manager;
 }  // namespace internal
 }  // namespace node
 }  // namespace blockchain
@@ -72,7 +75,7 @@ public:
         -> std::unique_ptr<block::Header> final;
 
     Bitcoin(
-        const api::Core& api,
+        const api::internal::Core& api,
         const api::client::internal::Blockchain& crypto,
         const api::network::internal::Blockchain& network,
         const Type type,

@@ -46,7 +46,7 @@ FilterOracle::BlockIndexer::BlockIndexer(
     const internal::FilterDatabase& db,
     const internal::HeaderOracle& header,
     const internal::BlockOracle& block,
-    const internal::Network& node,
+    const internal::Manager& node,
     FilterOracle& parent,
     const blockchain::Type chain,
     const filter::Type type,

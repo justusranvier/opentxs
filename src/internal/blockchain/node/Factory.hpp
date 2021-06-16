@@ -23,6 +23,11 @@ struct Blockchain;
 }  // namespace internal
 }  // namespace client
 
+namespace internal
+{
+struct Core;
+}  // namespace internal
+
 namespace network
 {
 namespace internal
@@ -55,7 +60,7 @@ struct FilterDatabase;
 struct FilterOracle;
 struct HeaderDatabase;
 struct HeaderOracle;
-struct Network;
+struct Manager;
 struct PeerDatabase;
 struct PeerManager;
 struct Wallet;
@@ -75,7 +80,7 @@ namespace opentxs::factory
 auto BlockchainDatabase(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
-    const blockchain::node::internal::Network& node,
+    const blockchain::node::internal::Manager& node,
     const blockchain::database::common::Database& db,
     const blockchain::Type type) noexcept
     -> std::unique_ptr<blockchain::internal::Database>;
@@ -83,7 +88,7 @@ auto BlockchainFilterOracle(
     const api::Core& api,
     const api::network::internal::Blockchain& network,
     const blockchain::node::internal::Config& config,
-    const blockchain::node::internal::Network& node,
+    const blockchain::node::internal::Manager& node,
     const blockchain::node::internal::HeaderOracle& header,
     const blockchain::node::internal::BlockOracle& block,
     const blockchain::node::internal::FilterDatabase& database,
@@ -91,14 +96,14 @@ auto BlockchainFilterOracle(
     const std::string& shutdown) noexcept
     -> std::unique_ptr<blockchain::node::internal::FilterOracle>;
 auto BlockchainNetworkBitcoin(
-    const api::Core& api,
+    const api::internal::Core& api,
     const api::client::internal::Blockchain& crypto,
     const api::network::internal::Blockchain& network,
     const blockchain::Type type,
     const blockchain::node::internal::Config& config,
     const std::string& seednode,
     const std::string& syncEndpoint) noexcept
-    -> std::unique_ptr<blockchain::node::internal::Network>;
+    -> std::unique_ptr<blockchain::node::internal::Manager>;
 OPENTXS_EXPORT auto BlockchainNetworkBitcoin(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
@@ -106,12 +111,12 @@ OPENTXS_EXPORT auto BlockchainNetworkBitcoin(
     const blockchain::node::internal::Config& config,
     const std::string& seednode,
     const std::string& syncEndpoint) noexcept
-    -> std::unique_ptr<blockchain::node::internal::Network>;
+    -> std::unique_ptr<blockchain::node::internal::Manager>;
 auto BlockchainPeerManager(
     const api::Core& api,
     const api::network::internal::Blockchain& network,
     const blockchain::node::internal::Config& config,
-    const blockchain::node::internal::Network& node,
+    const blockchain::node::internal::Manager& node,
     const blockchain::node::internal::HeaderOracle& headers,
     const blockchain::node::internal::FilterOracle& filter,
     const blockchain::node::internal::BlockOracle& block,
@@ -124,7 +129,7 @@ auto BlockchainPeerManager(
 auto BlockchainWallet(
     const api::Core& api,
     const api::client::internal::Blockchain& crypto,
-    const blockchain::node::internal::Network& parent,
+    const blockchain::node::internal::Manager& parent,
     const blockchain::node::internal::WalletDatabase& db,
     const blockchain::Type chain,
     const std::string& shutdown)
@@ -132,7 +137,7 @@ auto BlockchainWallet(
 auto BlockOracle(
     const api::Core& api,
     const api::network::internal::Blockchain& network,
-    const blockchain::node::internal::Network& node,
+    const blockchain::node::internal::Manager& node,
     const blockchain::node::internal::HeaderOracle& header,
     const blockchain::node::internal::BlockDatabase& db,
     const blockchain::Type chain,

@@ -123,11 +123,6 @@ public:
         -> bool final;
     auto DeleteCheckpoint() noexcept -> bool final;
     auto Init() noexcept -> void final;
-    auto ProcessSyncData(
-        block::Hash& prior,
-        std::vector<block::pHash>& hashes,
-        const network::blockchain::sync::Data& data) noexcept
-        -> std::size_t final;
 
     HeaderOracle(
         const api::Core& api,

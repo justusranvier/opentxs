@@ -7,9 +7,15 @@ add_library(
   opentxs-blockchain-node-base OBJECT
   "Base.cpp"
   "Base.hpp"
+  "SyncCache.cpp"
+  "SyncCache.hpp"
   "SyncClient.cpp"
   "SyncClient.hpp"
+  "SyncPipeline.cpp"
+  "SyncPipeline.hpp"
   "SyncServer.hpp"
+  "SyncTask.cpp"
+  "SyncTask.hpp"
 )
 target_link_libraries(
   opentxs-blockchain-node-base

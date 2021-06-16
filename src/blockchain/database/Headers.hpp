@@ -107,14 +107,14 @@ public:
 
     Headers(
         const api::Core& api,
-        const node::internal::Network& network,
+        const node::internal::Manager& network,
         const common::Database& common,
         const opentxs::storage::lmdb::LMDB& lmdb,
         const blockchain::Type type) noexcept;
 
 private:
     const api::Core& api_;
-    const node::internal::Network& network_;
+    const node::internal::Manager& network_;
     const common::Database& common_;
     const opentxs::storage::lmdb::LMDB& lmdb_;
     mutable std::mutex lock_;
